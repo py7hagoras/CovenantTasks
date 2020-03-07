@@ -1,5 +1,5 @@
 # CovenantTasks
-Source for tasks I have used with Covenant
+Source for tasks I have used with Covenant. They can be more elegant than this, so feel free to modify as you choose.
 
 ### ppid.cs
 This is a modified code from https://github.com/leoloobeek/csharp/blob/master/ExecutionTesting.cs that implements PPID spoofing.
