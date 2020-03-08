@@ -13,7 +13,7 @@ Some EDRs catch injection techniques that use the CreateRemoteThread API. This i
 It injects into explorer and might not work all the time (works 8 out of 10), execute and be patient. 
  **Note** if you exit the grunt, the target's explorer process will restart (bottom icons dissappear and re-appear, folders close, but every other thing is fine.)
   
-###ByPassUACPrompt
+### ByPassUACPrompt.cs
 Sometimes, the best way to bypass UAC is to ask the user...lol. 
 ***ExecutablePath*** and ***Arguments*** are compulsory.
 **Sample execution:**
