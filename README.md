@@ -19,4 +19,8 @@ Sometimes, the best way to bypass UAC is to ask the user...lol.
 **Sample execution:**
 ***BypassUACPrompt /executablepath:"C:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE" /arguments:"C:\\Users\\pytha\\AppData\\Roaming\\Microsoft\\Templates\\WheelOfFortune.docm"***
 
+### GetPIDByName
+Gets the Process ID using the process name
+***GetPIDByName explorer***
+
  **Please contribute if you have any**
