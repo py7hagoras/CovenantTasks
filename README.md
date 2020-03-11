@@ -19,8 +19,13 @@ Sometimes, the best way to bypass UAC is to ask the user...lol.
 **Sample execution:**
 ***BypassUACPrompt /executablepath:"C:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE" /arguments:"C:\\Users\\pytha\\AppData\\Roaming\\Microsoft\\Templates\\WheelOfFortune.docm"***
 
-### GetPIDByName
+### GetPIDByName.cs
 Gets the Process ID using the process name
 ***GetPIDByName explorer***
+
+### PhishUser.cs
+Phishes a user by prompting for Credentials. It will keep prompting till user enters valid credentials.
+***PhishUser "Outlook Security"*** You can also modify the ***pszMessageText*** as you deem fit.
+
 
  **Please contribute if you have any**
