@@ -27,5 +27,8 @@ Gets the Process ID using the process name
 Phishes a user by prompting for Credentials. It will keep prompting till user enters valid credentials.
 ***PhishUser "Outlook Security"*** You can also modify the ***pszMessageText*** as you deem fit.
 
+### LockSystem.cs
+This is a simple task to lock the user's system. Might come in handy, especially when you want user to re-enter credentials.
+
 
  **Please contribute if you have any**
