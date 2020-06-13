@@ -1,0 +1,46 @@
+- Name: GetPIDByName
+  Aliases: []
+  Author:
+    Name: Chinedu Onwukike
+    Handle: '@pytharmani'
+    Link: https://github.com/py7hagoras
+  Description: Get process ID with process name
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Diagnostics;\n\n\n  public class Task\n    {\n\n        public static string Execute(string ProcessName=\"\")\n        {\n\n                    string output = \"\";\n                    string pid;\n                    Process[] q = Process.GetProcessesByName(ProcessName);\n                    if (q.Length == 0) return \"Process does not exist: Maybe check spelling\";\n                    foreach (Process p in q)\n                    {\n                        pid = @\"Process PID: \" + Convert.ToString(p.Id);\n                     	output += pid + \"\\n\";\n\n                    } \n\n                    return output;\n\n        }\n    }"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ProcessName
+    Value: explorer
+    DefaultValue: ''
+    Description: Name of process
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []

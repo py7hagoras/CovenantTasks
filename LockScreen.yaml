@@ -1,0 +1,38 @@
+- Name: LockScreen
+  Aliases: []
+  Author:
+    Name: Chinedu Onwukike
+    Handle: '@pytharmani'
+    Link: https://github.com/py7hagoras
+  Description: A task to lock victim screen
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System.Runtime.InteropServices;\nusing System.Diagnostics;\n\npublic class Task { \n    [DllImport(\"user32\")] \n	public static extern void LockWorkStation();\n  \n	public static string Execute () { \n      LockWorkStation();\n      return \"Workstation has locked\"; \n    } \n} "
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  EmbeddedResources: []
