@@ -30,5 +30,8 @@ Phishes a user by prompting for Credentials. It will keep prompting till user en
 ### LockSystem.cs
 This is a simple task to lock the user's system. Might come in handy, especially when you want user to re-enter credentials.
 
+### UrbanBishop.yaml
+Adaptation of FuzzySecurity's UrbanBishop code for injection into specified process. Takes binary payload and process ID as input.
+
 
  **Please contribute if you have any**
