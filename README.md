@@ -33,5 +33,8 @@ This is a simple task to lock the user's system. Might come in handy, especially
 ### UrbanBishop.yaml
 Adaptation of FuzzySecurity's UrbanBishop code for injection into specified process. Takes binary payload and process ID as input.
 
+### PatchETW.yaml
+This disables ETW logging for current process. Makes AV/EDR blind to inline assembly execution amongst other activities within the process.
+
 
  **Please contribute if you have any**
