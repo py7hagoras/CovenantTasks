@@ -36,5 +36,8 @@ Adaptation of FuzzySecurity's UrbanBishop code for injection into specified proc
 ### PatchETW.yaml
 This disables ETW logging for current process. Makes AV/EDR blind to inline assembly execution amongst other activities within the process.
 
+### BypassUACSilentCleanUp-OpSafe.yaml
+This implements Juian Ureno's C# code for SilentCleanUp bypass. I added PPID Spoofing to make it opsafe (spoofing the explorer id is recommended), without it, Defender detects and kills the initiating process, probably because it detects the it's the same process that sets the Environment variable that also calls the "schtasks". So ppid spoofing is my way of bypassing this detection, so it would seems its explorer that calls schtasks.
+
 
  **Please contribute if you have any**
