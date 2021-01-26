@@ -16,8 +16,9 @@ It injects into explorer and might not work all the time (works 8 out of 10), ex
 ### ByPassUACPrompt.cs
 Sometimes, the best way to bypass UAC is to ask the user...lol. 
 ***ExecutablePath*** and ***Arguments*** are compulsory.
-**Sample execution:**
-***BypassUACPrompt /executablepath:"C:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE" /arguments:"C:\\Users\\pytha\\AppData\\Roaming\\Microsoft\\Templates\\WheelOfFortune.docm"***
+**Sample execution:**  
+
+```BypassUACPrompt /executablepath:"C:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE" /arguments:"C:\\Users\\pytha\\AppData\\Roaming\\Microsoft\\Templates\\WheelOfFortune.docm"```
 
 ### GetPIDByName.cs
 Gets the Process ID using the process name
@@ -43,8 +44,8 @@ This implements Juian Ureno's C# code for SilentCleanUp bypass. I added PPID Spo
 Used this to demonstrate to someone I had popped their system ;).
 
 ### Argue.yaml
-Similar to cobalt's strike argue command for argument spoofing. This is a simple Covenant adaptation of FuzzySecurity's SwampThing code. Found it useful for bypassing commandline parsing for certain EDRs.
-```argue C:\Windows\System32\notepad.exe "real.txt" "fake.txt"```
+Similar to cobalt's strike argue command for argument spoofing. This is a simple Covenant adaptation of FuzzySecurity's SwampThing code. Found it useful for bypassing commandline parsing for certain EDRs.  
+```argue C:\Windows\System32\notepad.exe "real.txt" "fake.txt"```  
 ```argue C:\Windows\System32\reg.exe "save HKLM\SAM C:\Users\Admin\Desktop\SAM" "whatever"```
 
  **Please contribute if you have any**
